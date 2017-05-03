@@ -51,24 +51,3 @@ class JobManager(object):
             print "Exception when submit trainer job: %s" % e
             return False
         return True
-
-
-if __name__ == "__main__":
-    paddle_job = PaddleJob(
-        pservers=3,
-        base_image="yancey1989/paddle-cloud",
-        glusterfs_volume="gfs_vol",
-        input="/yanxu05",
-        output="/yanxu05",
-        job_name="paddle-cloud",
-        namespace="yanxu",
-        use_gpu=False,
-        cpu_num=3,
-        port=7164,
-        ports_num=1,
-        ports_num_for_sparse=1,
-        num_gradient_servers=1,
-        trainer_package_path="/yanxu05/word2vec",
-        entry_point="python api_train_v2.py")
-    jm = JobManager(paddle_job)
-    jm.submit()

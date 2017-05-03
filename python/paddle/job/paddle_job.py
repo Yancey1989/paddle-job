@@ -17,7 +17,6 @@ class PaddleJob(object):
     def __init__(self,
                  pservers,
                  base_image,
-                 glusterfs_volume,
                  input,
                  output,
                  job_name,
@@ -30,7 +29,8 @@ class PaddleJob(object):
                  num_gradient_servers=1,
                  port=7164,
                  ports_num=1,
-                 ports_num_for_sparse=1):
+                 ports_num_for_sparse=1,
+                 ceph_volume=None):
         self.pservers = pservers
         self.base_iamge = base_image
         self.glusterfs_volume = glusterfs_volume
@@ -48,6 +48,7 @@ class PaddleJob(object):
         self.num_gradient_servers = num_gradient_servers
         self.cpu_num = cpu_num
         self.gpu_num = gpu_num
+        self.ceph_volume = ceph_volume
 
     def get_pserver_job_name(self):
         return "%s-pserver" % self.job_name
@@ -108,6 +109,9 @@ class PaddleJob(object):
         return {"paddle-job": self.get_trainer_job_name()}
 
     def new_pserver_job(self):
+        """
+        return: descript a statfuleset format json
+        """
         return {
             "apiVersion": "apps/v1beta1",
             "kind": "StatefulSet"
@@ -133,35 +137,55 @@ class PaddleJob(object):
                 }
             }
         }
+    def _get_trainer_volumes(self):
+        volumes = []
+        if self.ceph_volume:
+            volumes.append({
+                "name": "cephfs",
+                "monitors": self.ceph_volume.monitors,
+                "path": "/",
+                "user": self.ceph_volume.user,
+                "secretRef": {
+                    "name": self.ceph_volume.secret_name
+                }
+            })
+        return volumes
+
+    def _get_trainer_volume_mounts(self):
+        volume_mounts = []
+        if self.ceph_volume:
+            volume_mounts.append({
+                "mount_path": "/mnt/cephfs",
+                "name": "cephfs"
+            })
+        return volume_mounts
 
     def new_trainer_job(self):
-        return client.V1Job(
-            metadata=client.V1ObjectMeta(name=self.get_trainer_job_name()),
-            spec=client.V1JobSpec(
-                parallelism=self.trainers,
-                completions=self.trainers,
-                template=client.V1PodTemplateSpec(
-                    metadata=client.V1ObjectMeta(
-                        labels=self.get_trainer_labels()),
-                    spec=client.V1PodSpec(
-                        volumes=[
-                            client.V1Volume(
-                                name="glusterfsvol",
-                                glusterfs=client.V1GlusterfsVolumeSource(
-                                    endpoints=DEFAULT_GLUSTERFS_ENDPOINT,
-                                    path=self.glusterfs_volume))
-                        ],
-                        containers=[
-                            client.V1Container(
-                                name="trainer",
-                                image=self._get_runtime_docker_image_name(),
-                                image_pull_policy="Always",
-                                command=self._get_trainer_entrypoint(),
-                                env=self.get_env(),
-                                volume_mounts=[
-                                    client.V1VolumeMount(
-                                        mount_path=GLUSTERFS_MOUNT_PATH,
-                                        name="glusterfsvol")
-                                ])
-                        ],
-                        restart_policy="Never"))))
+        return {
+            "apiVersion": "batch/v1",
+            "kind": "Job",
+            "metadata": {
+                "name": self.get_trainer_job_name()
+            },
+            "spec": {
+                "parallelism": self._get_trainers(),
+                "completions": self._get_trainers(),
+                "template": {
+                    "metadata":{
+                        "labels": self.get_trainer_labels()
+                    },
+                    "spec": {
+                        "volumes": self._get_trainer_volumes(),
+                        "containers":[{
+                            "name": "trainer",
+                            "image": self._get_runtime_docker_image_name(),
+                            "image_pull_policy": "Always",
+                            "command": self._get_trainer_entrypoint(),
+                            "env": self.get_env(),
+                            "volume_mounts": self._get_trainer_volume_mounts()
+                        }],
+                        "restart_policy": "Never"
+                    }
+                }
+            }
+        }

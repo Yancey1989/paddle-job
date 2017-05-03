@@ -1,30 +1,44 @@
 # PaddlePaddel Job
-向Kubernetes集群提交一个PaddlePaddle的分布式任务
+Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Usage
-```python
-import paddle.job as job
-from job.job_manager import JobManager
-from job.paddle_job import PaddleJob
+1. Init `PaddleJob`
+  ```python
+  import paddle.job as job
+  from job import PaddleJob, CephVolume, JobManager
+  job = PaddleJob(
+    pservers=3,
+    base_image="yancey1989/paddle-cloud",
+    input="/yanxu05",
+    "output"="/yanxu05",
+    "job_name"="paddle-cloud",
+    "namespace"="yanxu",
+    "use_gpu"=False,
+    "cpu_num"=3,
+    "memory"="1G"
+    "trainer_package_path"="/yanxu05/word2vec",
+    "entry_point"="python api_train_v2.py",
+    ceph_volume=CephVolume())
+  ```
+1. Submit Job
+  ```python
+  job.dist_train(
+    trainer=trainer,
+    reader=reader,
+    paddle_job=job)
+  ```
 
-paddle_job = PaddleJob(
-      trainers=3,
-      pservers=3,
-      base_image="yancey1989/paddle-cloud",
-      glusterfs_volume="gfs_vol",
-      input="/yanxu05",
-      output="/yanxu05",
-      job_name="paddle-cloud",
-      namespace="yanxu",
-      use_gpu=False,
-      port=7164,
-      ports_num=1,
-      ports_num_for_sparse=1,
-      num_gradient_servers=1,
-      trainer_package_path="/yanxu05/word2vec",
-      entry_point="python api_train_v2.py")
+## `Paddlejob` parameter description
 
-jm = JobManager(paddle_job)
-jm.submit()
-
-```
+parameter | required | default | explain
+  --- | --- | --- | ---
+job_name|YES||you should special a uniq job name which in a namespace
+trainer_package|YES|| entry point for startup trainer process
+input| YES || input directory on distributed file system
+output|YES|| output directory on distributed file system
+pservers|YES|| parameter server process count
+base-image|YES||PaddlePaddle production Docker image
+memory|YES|| limits for memory
+use_gpu|NO|false| whether use GPU
+cpu_num|NO|1| if `use_gpu=false`, this parameter is required
+gpu_num|NO|1| if `use_gpu=true`, this parameter is required
