@@ -10,14 +10,14 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     pservers=3,
     base_image="yancey1989/paddle-cloud",
     input="/yanxu05",
-    "output"="/yanxu05",
-    "job_name"="paddle-cloud",
-    "namespace"="yanxu",
-    "use_gpu"=False,
-    "cpu_num"=3,
-    "memory"="1G"
-    "trainer_package_path"="/yanxu05/word2vec",
-    "entry_point"="python api_train_v2.py",
+    output="/yanxu05",
+    job_name="paddle-cloud",
+    namespace="yanxu",
+    use_gpu=False,
+    cpu_num=3,
+    memory="1G"
+    trainer_package_path="/yanxu05/word2vec",
+    entry_point="python api_train_v2.py",
     ceph_volume=CephVolume())
   ```
 1. Submit Job
