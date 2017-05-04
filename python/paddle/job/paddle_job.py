@@ -64,6 +64,7 @@ class PaddleJob(object):
         envs.append({"name":"OUTPUT",               "value":self.output})
         envs.append({"name":"ENTRY_POINT",          "value":self.entry_point})
         envs.append({"name":"TRAINER_PACKAGE_PATH", "value":self.trainer_package_path})
+        envs.append({"name":"PADDLE_ON_CLOUD",      "value":"YES"})
         envs.append({"name":"NAMESPACE", "valueFrom":{
             "fieldRef":{"fieldPath":"metadata.namespace"}}})
         return envs
