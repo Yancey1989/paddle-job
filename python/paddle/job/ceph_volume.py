@@ -3,11 +3,13 @@ __all__ = ["CephVolume"]
 
 CEPHFS_MOUNT_PATH="/mnt/cephfs"
 
-class CephVolume(object):
-    def __init__(self, monitors_addr=None, user=None, secret_name=None):
-        self.monitors = get_parameter(monitors_addr, "CEPH_MONITOR_ADDRS").split(",")
-        self.user = get_parameter(user, "CEPH_USER")
-        self.secret_name = get_parameter(secret_name, "CEPH_SECRET")
+class CephFSVolume(object):
+    def __init__(self, monitors_addr=None, user=None, secret_name=None, mount_path=None):
+        self.monitors = get_parameter(monitors_addr, "CEPHFS_MONITOR_ADDRS").split(",")
+        self.user = get_parameter(user, "CEPHFS_USER")
+        self.secret_name = get_parameter(secret_name, "CEPHFS_SECRET")
+        self.mount_path = get_parameter(mount_path, "CEPHFS_MOUNT_PATH")
+
 
     @property
     def monitors(self):

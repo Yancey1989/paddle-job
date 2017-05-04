@@ -27,7 +27,7 @@ class PaddleJob(object):
                  port=7164,
                  ports_num=1,
                  ports_num_for_sparse=1,
-                 ceph_volume=None):
+                 cephfs_volume=None):
         self.pservers = pservers
         self.base_iamge = base_image
         self.input = input
@@ -62,10 +62,8 @@ class PaddleJob(object):
         envs.append({"name":"PORTS_NUM_FOR_SPARSE", "value":str(self.ports_num_for_sparse)})
         envs.append({"name":"NUM_GRADIENT_SERVERS", "value":str(self.num_gradient_servers)})
         envs.append({"name":"OUTPUT",               "value":self.output})
-        envs.append({"name":"ENTRY_POINT",          "value": self.entry_point})
-        envs.append({"name":"TRAINER_PACKAGE_PATH",
-                     "value":os.path.join(self.ceph_volume.CEPHFS_MOUNT_PATH,
-                           self.trainer_package_path.lstrip("/"))})
+        envs.append({"name":"ENTRY_POINT",          "value":self.entry_point})
+        envs.append({"name":"TRAINER_PACKAGE_PATH", "value":self.trainer_package_path})
         envs.append({"name":"NAMESPACE", "value_from":{
             "field_ref":{"field_path":"metadata.namespace"}}})
         return envs
