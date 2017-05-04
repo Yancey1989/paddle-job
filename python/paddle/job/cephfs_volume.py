@@ -1,5 +1,5 @@
 
-__all__ = ["CephVolume"]
+__all__ = ["CephFSVolume"]
 
 CEPHFS_MOUNT_PATH="/mnt/cephfs"
 
