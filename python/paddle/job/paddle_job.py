@@ -43,7 +43,7 @@ class PaddleJob(object):
         self.num_gradient_servers = num_gradient_servers
         self.cpu_num = cpu_num
         self.gpu_num = gpu_num
-        self.ceph_volume = ceph_volume
+        self.cephfs_volume = cephfs_volume
         self.memory = memory
 
     def _get_pserver_job_name(self):
@@ -64,8 +64,8 @@ class PaddleJob(object):
         envs.append({"name":"OUTPUT",               "value":self.output})
         envs.append({"name":"ENTRY_POINT",          "value":self.entry_point})
         envs.append({"name":"TRAINER_PACKAGE_PATH", "value":self.trainer_package_path})
-        envs.append({"name":"NAMESPACE", "value_from":{
-            "field_ref":{"field_path":"metadata.namespace"}}})
+        envs.append({"name":"NAMESPACE", "valueFrom":{
+            "fieldRef":{"fieldPath":"metadata.namespace"}}})
         return envs
 
     def _get_pserver_container_ports(self):
@@ -102,14 +102,14 @@ class PaddleJob(object):
 
     def _get_trainer_volumes(self):
         volumes = []
-        if self.ceph_volume:
-            volumes.append(self.ceph_volume.get_volume())
+        if self.cephfs_volume:
+            volumes.append(self.cephfs_volume.get_volume())
         return volumes
 
     def _get_trainer_volume_mounts(self):
         volume_mounts = []
-        if self.ceph_volume:
-            volume_mounts.append(self.ceph_volume.get_volume_mount())
+        if self.cephfs_volume:
+            volume_mounts.append(self.cephfs_volume.get_volume_mount())
         return volume_mounts
 
     def new_trainer_job(self):
