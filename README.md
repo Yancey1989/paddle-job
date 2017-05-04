@@ -20,7 +20,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     entry_point="python api_train_v2.py",
     ceph_volume=CephVolume())
   ```
-1. Submit Job
+1. Call `job.dist_train`, instead of `trainer.train`
   ```python
   job.dist_train(
     trainer=trainer,
