@@ -18,3 +18,20 @@ class CephVolume(object):
     @property
     def secret_name(self):
         return self.secret_name
+
+    def get_volume(self):
+        return {
+            "name": "cephfs",
+            "monitors": self.ceph_volume.monitors,
+            "path": "/",
+            "user": self.ceph_volume.user,
+            "secretRef": {
+                "name": self.ceph_volume.secret_name
+            }
+        }
+
+    def get_volume_mount(self):
+        return {
+            "mount_path": "/mnt/cephfs",
+            "name": "cephfs"
+        }

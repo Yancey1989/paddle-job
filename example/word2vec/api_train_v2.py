@@ -2,8 +2,8 @@ import gzip
 import math
 
 import paddle.v2 as paddle
-import paddle_job.job as job
-from job import Paddlejob, dist_train,CephVolume
+import paddle.job as job
+
 import os
 embsize = 32
 hiddensize = 256
@@ -107,21 +107,17 @@ def main():
         reader=paddle.batch(paddle.dataset.imikolov.train(word_dict, N), 32),
         num_passes=30,
         event_handler=event_handler,
-        paddle_job=PaddleJob(
-            trainers=3,
+        paddle_job=job.Paddlejob(
             pservers=3,
             base_image="yancey1989/paddle-cloud",
-            glusterfs_volume="gfs_vol",
             input="/yanxu05",
             output="/yanxu05",
             job_name="paddle-cloud",
             namespace="yanxu",
             use_gpu=False,
+            cpu_num=1,
             trainer_package_path="/yanxu05/word2vec",
-            entry_point="python api_train_v2.py",
-            ceph_volume=CephVolume()),
-    )
-
+            entry_point="python api_train_v2.py"))
 
 if __name__ == '__main__':
     main()

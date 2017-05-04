@@ -5,8 +5,8 @@ from kubernetes.client.rest import ApiException
 from kubernetes.client import configuration
 
 __all__ = ["JobManager"]
-NAMESPACE = os.getenv("NAMESPACE", "default")
 
+NAMESPACE = os.getenv("NAMESPACE", "default")
 def init_api_client():
     service_host = os.getenv("KUBERNETES_SERVICE_HOST", None)
     ca_cert = os.getenv("CA_CERT", None)
@@ -30,11 +30,11 @@ class JobManager(object):
         self.paddle_job = paddle_job
         init_api_client()
 
-    def submit(self):
+    def submit(self, namespace):
         #submit parameter server statefulset
         try:
             ret = client.AppsV1beta1Api().create_namespaced_stateful_set(
-                namespace=NAMESPACE,
+                namespace=namespace,
                 body=self.paddle_job.new_pserver_job(),
                 pretty=True)
         except ApiException, e:
@@ -44,10 +44,25 @@ class JobManager(object):
         #submit trainer job
         try:
             ret = client.BatchV1Api().create_namespaced_job(
-                namespace=NAMESPACE,
+                namespace=namespace,
                 body=self.paddle_job.new_trainer_job(),
                 pretty=True)
         except ApiException, e:
             print "Exception when submit trainer job: %s" % e
             return False
         return True
+
+if __name__=="__main__":
+    paddle_job = PaddleJob(
+        pservers=3,
+        base_image="yancey1989/paddle-cloud",
+        input="/yanxu05",
+        output="/yanxu05",
+        job_name="paddle-cloud",
+        use_gpu=False,
+        cpu_num=3,
+        memory="1G",
+        trainer_package_path="/example/word2vec",
+        entry_point="python api_train_v2.py")
+    jm = JobManager(paddle_job=paddle_job)
+    jm.submit(namespace="yanxu")
