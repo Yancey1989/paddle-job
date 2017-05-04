@@ -1,4 +1,4 @@
-
+import os
 __all__=["dist_train"]
 
 def get_parameter(parameter, env_parameter):

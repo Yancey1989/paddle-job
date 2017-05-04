@@ -29,12 +29,13 @@ class JobManager(object):
     def __init__(self, paddle_job):
         self.paddle_job = paddle_job
         init_api_client()
+        self.namespace = paddle_job.namespace
 
     def submit(self, namespace):
         #submit parameter server statefulset
         try:
             ret = client.AppsV1beta1Api().create_namespaced_stateful_set(
-                namespace=namespace,
+                namespace=self.namespace,
                 body=self.paddle_job.new_pserver_job(),
                 pretty=True)
         except ApiException, e:
@@ -44,7 +45,7 @@ class JobManager(object):
         #submit trainer job
         try:
             ret = client.BatchV1Api().create_namespaced_job(
-                namespace=namespace,
+                namespace=self.namespace,
                 body=self.paddle_job.new_trainer_job(),
                 pretty=True)
         except ApiException, e:

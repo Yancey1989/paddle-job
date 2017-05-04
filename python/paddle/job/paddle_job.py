@@ -78,7 +78,7 @@ class PaddleJob(object):
         ports = []
         port = self.port
         for i in xrange(self.ports_num + self.ports_num_for_sparse):
-            ports.append({"contaienrPort":port, "name":"jobport-%d" % i})
+            ports.append({"containerPort":port, "name":"jobport-%d" % i})
             port += 1
         return ports
 
