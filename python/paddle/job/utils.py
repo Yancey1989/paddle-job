@@ -17,8 +17,8 @@ def dist_train(trainer,
                event_handler=None,
                feeding=None,
                paddle_job=None):
-    if os.getenv("PADDLE_NOTEBOOK", "NO") == "YES":
-        #submit distributed training job
+    if os.getenv("PADDLE_ON_CLOUD", "NO") == "NO":
+        # if PADDLE_ON_CLOUD=NO, submit the distributed training job
         job_manager = JobManager(paddle_job)
         if not job_manager.submit():
             print "submit paddle job failed."
