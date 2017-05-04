@@ -28,7 +28,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     paddle_job=job)
   ```
 
-## `Paddlejob` parameter description
+## `PaddleJob` parameter description
 
 parameter | required | default | explain
   --- | --- | --- | ---
