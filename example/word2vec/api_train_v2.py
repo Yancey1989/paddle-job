@@ -115,7 +115,7 @@ def main():
             job_name="paddle-cloud",
             namespace="yanxu",
             use_gpu=False,
-            cpu_num=1,
+            cpu_num=3,
             trainer_package_path="/yanxu05/word2vec",
             entry_point="python api_train_v2.py"))
 
