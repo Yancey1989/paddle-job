@@ -2,7 +2,7 @@
 Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Usage
-1. Initial `PaddleJob`
+- Initialize `PaddleJob`
   ```python
   import paddle.job as job
   paddle_job = job.PaddleJob(
@@ -19,7 +19,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     entry_point="python api_train_v2.py",
     cephfs_volume=CephVolume())
   ```
-1. Local Training and Distributed Traininig
+- Local Training and Distributed Traininig
 
   If you want to start a local training job, according with PaddlePaddle v2 API
   ```python
@@ -50,7 +50,7 @@ cephfs_volume|NO|None|CephFS volume configuration
 
 - `CephFSVolume` Parameters
 
-If you want to use CephFS as your distributed storage,
+  If you want to use CephFS as your distributed storage,
  you can configurat CephFSVolume with parameters or export environment variables.
 
 parameter | required | default | environment |explain
