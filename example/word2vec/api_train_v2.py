@@ -107,7 +107,7 @@ def main():
         reader=paddle.batch(paddle.dataset.imikolov.train(word_dict, N), 32),
         num_passes=30,
         event_handler=event_handler,
-        paddle_job=job.Paddlejob(
+        paddle_job=job.PaddleJob(
             pservers=3,
             base_image="yancey1989/paddle-cloud",
             input="/yanxu05",

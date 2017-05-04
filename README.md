@@ -2,11 +2,10 @@
 Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Usage
-1. Init `PaddleJob`
+1. Initial `PaddleJob`
   ```python
   import paddle.job as job
-  from job import PaddleJob, CephVolume, JobManager
-  job = PaddleJob(
+  paddle_job = job.PaddleJob(
     pservers=3,
     base_image="yancey1989/paddle-cloud",
     input="/yanxu05",
@@ -28,7 +27,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     paddle_job=job)
   ```
 
-## `PaddleJob` parameter description
+## `PaddleJob` parameters description
 
 parameter | required | default | explain
   --- | --- | --- | ---
