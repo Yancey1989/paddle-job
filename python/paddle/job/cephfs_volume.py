@@ -5,7 +5,7 @@ CEPHFS_MOUNT_PATH="/mnt/cephfs"
 
 class CephFSVolume(object):
     def __init__(self, monitors_addr=None, user=None, secret_name=None, mount_path=None):
-        self.monitors = get_parameter(monitors_addr, "CEPHFS_MONITOR_ADDRS").split(",")
+        self.monitors = get_parameter(monitors_addr, "CEPHFS_MONITORS_ADDR").split(",")
         self.user = get_parameter(user, "CEPHFS_USER")
         self.secret_name = get_parameter(secret_name, "CEPHFS_SECRET")
         self.mount_path = get_parameter(mount_path, "CEPHFS_MOUNT_PATH")

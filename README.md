@@ -32,7 +32,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Parameters
 
-- `PaddleJob` Parameters
+- `PaddleJob`
 
 parameter | required | default | explain
   --- | --- | --- | ---
@@ -48,14 +48,15 @@ cpu_num|NO|1| if `use_gpu=false`, this parameter is required
 gpu_num|NO|1| if `use_gpu=true`, this parameter is required
 cephfs_volume|NO|None|CephFS volume configuration
 
-- `CephFSVolume` Parameters
+- `CephFSVolume`
 
-  If you want to use CephFS as your distributed storage,
- you can configurat CephFSVolume with parameters or export environment variables.
+If you want to use CephFS as your distributed storage,
+you can configurat `CephFSVolume` with
+`CephFSVolume(monitors_addr="10.0.123.3:6789,10.0.123.4:6789",...)` or initialize `CephFSVolume` with environment variables and no parameters: `CephFSVolume()`
 
 parameter | required | default | environment |explain
  --- | --- | --- | --- | ---
- monitors_addr| YES | | CEPHFS_MONITOR_ADDRS| ceph cluster monitor addres
+ monitors_addr| YES | | CEPHFS_MONITORS_ADDR| ceph cluster monitor addres
 user | YES| admin |CEPHFS_USER|ceph user name
 secret_name | YES |ceph-secret | CEPHFS_SECRET | ceph secret name in kubernetes
 mount_path | NO | /mnt/cephfs | CEPHFS_MOUNT_PATH | CephFS mount path in Pod
