@@ -4,10 +4,6 @@ import os
 
 __all__ = ["PaddleJob"]
 
-## kubernetes default configuration
-DEFAULT_GLUSTERFS_ENDPOINT = "glusterfs-cluster"
-GLUSTERFS_MOUNT_PATH = "/mnt/glusterfs"
-
 
 class PaddleJob(object):
     """
@@ -68,7 +64,7 @@ class PaddleJob(object):
         envs.append({"name":"OUTPUT",               "value":self.output})
         envs.append({"name":"ENTRY_POINT",          "value": self.entry_point})
         envs.append({"name":"TRAINER_PACKAGE_PATH",
-                     "value":os.path.join(GLUSTERFS_MOUNT_PATH,
+                     "value":os.path.join(self.ceph_volume.CEPHFS_MOUNT_PATH,
                            self.trainer_package_path.lstrip("/"))})
         envs.append({"name":"NAMESPACE", "value_from":{
             "field_ref":{"field_path":"metadata.namespace"}}})

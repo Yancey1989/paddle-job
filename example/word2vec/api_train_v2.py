@@ -116,7 +116,7 @@ def main():
             namespace="yanxu",
             use_gpu=False,
             cpu_num=3,
-            trainer_package_path="/yanxu05/word2vec",
+            trainer_package_path="/example/word2vec",
             entry_point="python api_train_v2.py"))
 
 if __name__ == '__main__':

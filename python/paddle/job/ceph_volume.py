@@ -1,6 +1,8 @@
 
 __all__ = ["CephVolume"]
 
+CEPHFS_MOUNT_PATH="/mnt/cephfs"
+
 class CephVolume(object):
     def __init__(self, monitors_addr=None, user=None, secret_name=None):
         self.monitors = get_parameter(monitors_addr, "CEPH_MONITOR_ADDRS").split(",")
@@ -32,6 +34,6 @@ class CephVolume(object):
 
     def get_volume_mount(self):
         return {
-            "mount_path": "/mnt/cephfs",
+            "mount_path": CEPHFS_MOUNT_PATH,
             "name": "cephfs"
         }

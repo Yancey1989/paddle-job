@@ -20,6 +20,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     ceph_volume=CephVolume())
   ```
 1. Call `job.dist_train`, instead of `trainer.train`
+  You should set environment variable `PADDLE_NOTEBOOK=YES` before you submit the job.
   ```python
   job.dist_train(
     trainer=trainer,
