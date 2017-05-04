@@ -1,4 +1,5 @@
 import os
+from job_manager import JobManager
 __all__=["dist_train"]
 
 def get_parameter(parameter, env_parameter):

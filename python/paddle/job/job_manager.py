@@ -31,7 +31,7 @@ class JobManager(object):
         init_api_client()
         self.namespace = paddle_job.namespace
 
-    def submit(self, namespace):
+    def submit(self):
         #submit parameter server statefulset
         try:
             ret = client.AppsV1beta1Api().create_namespaced_stateful_set(
@@ -66,4 +66,4 @@ if __name__=="__main__":
         trainer_package_path="/example/word2vec",
         entry_point="python api_train_v2.py")
     jm = JobManager(paddle_job=paddle_job)
-    jm.submit(namespace="yanxu")
+    jm.submit()
