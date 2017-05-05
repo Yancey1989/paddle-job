@@ -7,6 +7,19 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
   ./docker/build_docker.sh  <image name> <image tag>
   docker push <image name>:<image tag>
   ```
+  Example:
+  ```bash
+  ./docker/build_docker.sh yancey1989/paddle_job latest
+  docker push yancey1989/paddle_job latest
+  ```
+- Submit Distributed Job
+  ```bash
+  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config <image name>:<image tag> python /example/word2vec/api_train_v2.py
+  ```
+  Example:
+  ```bash
+  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config yancey1989/paddle_job python /example/word2vec/api_train_v2.py
+  ```
 - Initialize `PaddleJob`
   ```python
   import paddle.job as job
