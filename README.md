@@ -4,13 +4,13 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 ## Usage
 - Build Docker Image
   ```bash
-  ./docker/build_docker.sh  <image name> <image tag>
+  ./docker/build_docker.sh <trainer_package_path> <image_package_path> <image name> <image tag>
   docker push <image name>:<image tag>
   ```
   Example:
   ```bash
-  ./docker/build_docker.sh yancey1989/paddle_job latest
-  docker push yancey1989/paddle_job latest
+  ./docker/build_docker.sh ./example/ /example yancey1989/paddle_job latest
+  docker push yancey1989/paddle_job:latest
   ```
 - Submit Distributed Job
   ```bash

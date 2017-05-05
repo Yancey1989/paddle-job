@@ -2,3 +2,4 @@
 python/build
 python/dist
 python/paddle_job.egg-info
+Dockerfile
