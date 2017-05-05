@@ -2,6 +2,11 @@
 Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Usage
+- Build Docker Image
+  ```bash
+  ./docker/build_docker.sh  <image name> <image tag>
+  docker push <image name>:<image tag>
+  ```
 - Initialize `PaddleJob`
   ```python
   import paddle.job as job
@@ -15,7 +20,7 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
     use_gpu=False,
     cpu_num=3,
     memory="1G"
-    trainer_package_path="/yanxu05/word2vec",
+    trainer_package_path="/example/word2vec",
     entry_point="python api_train_v2.py",
     cephfs_volume=CephVolume())
   ```
