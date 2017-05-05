@@ -2,7 +2,7 @@
 Submit PaddlePaddle distributed traininig job to Kubernetes cluster
 
 ## Usage
-- Build Docker Image
+- Build and Push Docker Image
   ```bash
   ./docker/build_docker.sh <trainer_package_path> <image_package_path> <image name> <image tag>
   docker push <image name>:<image tag>
