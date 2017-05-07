@@ -9,6 +9,10 @@ embsize = 32
 hiddensize = 256
 N = 5
 
+CEPHFS_MOUNT_PATH="/mnt/cephfs"
+TRAIN_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "train.txt")
+TEST_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "test.txt")
+TRAINER_COUNT=int(os.getenv("TRAINER_COUNT", "1"))
 
 def wordemb(inlayer):
     wordemb = paddle.layer.embedding(
@@ -26,10 +30,16 @@ def wordemb(inlayer):
 def fetch_trainer_id():
     return int(os.getenv("TRAINER_ID", 0))
 
-
 def fetch_pserver_ips():
     return os.getenv("PSERVER_IPS", "")
 
+def dist_reader(filename, trainer_count, trainer_id):
+    with open (filename) as f:
+        cnt = 0
+        for line in f:
+            cnt += 1
+            if cnt % trainer_count == trainer_id:
+                yield line
 
 def main():
     # for local training
@@ -87,7 +97,7 @@ def main():
                     trainer.save_parameter_to_tar(f)
                 result = trainer.test(
                     paddle.batch(
-                        paddle.dataset.imikolov.test(word_dict, N), 32))
+                        dist_reader(TEST_DATA_PATH, TRAINER_COUNT, fetch_trainer_id()),32))
                 print "Pass %d, Batch %d, Cost %f, %s, Testing metrics %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics,
                     result.metrics)
@@ -102,16 +112,16 @@ def main():
                                  parameters,
                                  adagrad,
                                  is_local=not cluster_train)
+
     job.dist_train(
         trainer=trainer,
-        reader=paddle.batch(paddle.dataset.imikolov.train(word_dict, N), 32),
+        reader=paddle.batch(dist_reader(TRAIN_DATA_PATH, TRAINER_COUNT, \
+                                        fetch_trainer_id()), 32),
         num_passes=30,
         event_handler=event_handler,
         paddle_job=job.PaddleJob(
             pservers=3,
-            base_image="yancey1989/paddle-cloud",
-            input="/yanxu05",
-            output="/yanxu05",
+            base_image="yancey1989/paddle-job",
             job_name="paddle-cloud",
             namespace="yanxu",
             use_gpu=False,

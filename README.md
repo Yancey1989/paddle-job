@@ -47,6 +47,10 @@ Submit PaddlePaddle distributed traininig job to Kubernetes cluster
   ```python
   job.dist_train(trainer=trainer, reader=reader, paddle_job=paddle_job)
   ```
+- Running On Cloud
+
+  If the code is running on cloud, the environment variable "PADDLE_ON_CLOUD=YES" will be set,
+  so you can custom the difference logic for distributed traininig and local traininig.
 
 ## Parameters
 
