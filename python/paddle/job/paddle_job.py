@@ -1,7 +1,7 @@
 import kubernetes
 from kubernetes import client, config
 import os
-
+import paddle.job
 __all__ = ["PaddleJob"]
 
 
@@ -13,12 +13,10 @@ class PaddleJob(object):
     def __init__(self,
                  pservers,
                  base_image,
-                 input,
-                 output,
                  job_name,
                  trainer_package_path,
                  entry_point,
-                 namespace="default",
+                 namespace="",
                  use_gpu=False,
                  cpu_num=1,
                  gpu_num=1,
@@ -30,10 +28,8 @@ class PaddleJob(object):
                  cephfs_volume=None):
         self.pservers = pservers
         self.base_iamge = base_image
-        self.input = input
-        self.output = output
         self.job_name = job_name
-        self.namespace = namespace
+        self.namespace = paddle.job.utils.get_parameter(namespace, "USER_NAMESPACE", "default")
         self.ports_num = ports_num
         self.ports_num_for_sparse = ports_num_for_sparse
         self.port = port
@@ -61,10 +57,9 @@ class PaddleJob(object):
         envs.append({"name":"PORTS_NUM",            "value":str(self.ports_num)})
         envs.append({"name":"PORTS_NUM_FOR_SPARSE", "value":str(self.ports_num_for_sparse)})
         envs.append({"name":"NUM_GRADIENT_SERVERS", "value":str(self.num_gradient_servers)})
-        envs.append({"name":"OUTPUT",               "value":self.output})
         envs.append({"name":"ENTRY_POINT",          "value":self.entry_point})
         envs.append({"name":"TRAINER_PACKAGE_PATH", "value":self.trainer_package_path})
-        envs.append({"name":"PADDLE_ON_CLOUD",      "value":"YES"})
+        envs.append({"name":"RUNNING_ON_CLOUD",      "value":"YES"})
         envs.append({"name":"NAMESPACE", "valueFrom":{
             "fieldRef":{"fieldPath":"metadata.namespace"}}})
         return envs
@@ -104,13 +99,13 @@ class PaddleJob(object):
     def _get_trainer_volumes(self):
         volumes = []
         if self.cephfs_volume:
-            volumes.append(self.cephfs_volume.get_volume())
+            volumes.append(self.cephfs_volume.volume)
         return volumes
 
     def _get_trainer_volume_mounts(self):
         volume_mounts = []
         if self.cephfs_volume:
-            volume_mounts.append(self.cephfs_volume.get_volume_mount())
+            volume_mounts.append(self.cephfs_volume.volume_mount)
         return volume_mounts
 
     def new_trainer_job(self):
@@ -138,7 +133,7 @@ class PaddleJob(object):
                             "image_pull_policy": "Always",
                             "command": self._get_trainer_entrypoint(),
                             "env": self.get_env(),
-                            "volume_mounts": self._get_trainer_volume_mounts()
+                            "volumeMounts": self._get_trainer_volume_mounts()
                         }],
                         "restartPolicy": "Never"
                     }
@@ -174,3 +169,22 @@ class PaddleJob(object):
                 }
             }
         }
+if __name__=="__main__":
+    from cephfs_volume import CephFSVolume
+    paddle_job=PaddleJob(
+        pservers=3,
+        base_image="yancey1989/paddle-job",
+        job_name="paddle-job",
+        namespace="yanxu",
+        use_gpu=False,
+        cpu_num=3,
+        trainer_package_path="/example/word2vec",
+        #entry_point="python train.py",
+        entry_point="sleep 3600",
+        cephfs_volume=CephFSVolume(
+            monitors_addr="172.19.32.166:6789",
+            user="admin",
+            secret_name="ceph-secret"
+        ))
+    import json
+    print json.dumps(paddle_job.new_trainer_job(),indent=2)

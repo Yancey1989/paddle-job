@@ -11,20 +11,20 @@ def get_parameter(parameter, env_parameter, default):
         else:
             return default
 
-def dist_train(trainer,
+def dist_train(trainer_func,
                reader,
                num_passes=1,
                event_handler=None,
                feeding=None,
                paddle_job=None):
-    if os.getenv("PADDLE_ON_CLOUD", "NO") == "NO":
-        # if PADDLE_ON_CLOUD=NO, submit the distributed training job
+    if os.getenv("RUNNING_ON_CLOUD", "NO") == "NO":
         job_manager = JobManager(paddle_job)
         if not job_manager.submit():
             print "submit paddle job failed."
         else:
             print "submit paddle job successed."
     else:
+	trainer = trainer_func()
         trainer.train(
             reader=reader,
             num_passes=num_passes,

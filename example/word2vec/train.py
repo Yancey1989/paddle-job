@@ -9,9 +9,9 @@ embsize = 32
 hiddensize = 256
 N = 5
 
-CEPHFS_MOUNT_PATH="/mnt/cephfs"
-TRAIN_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "train.txt")
-TEST_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "test.txt")
+TRAIN_DATA_PATH="/data/yanxu/word2vec/train.txt"
+TRAIN_DATA_PATH="/data/yanxu/word2vec/train.txt"
+WORD_DICT_PATH="/data/yanxu/word2vec/word_dict.pickle"
 TRAINERS=int(os.getenv("TRAINERS", "1"))
 
 def wordemb(inlayer):
@@ -40,8 +40,7 @@ def dist_reader(filename, trainers, trainer_id):
             cnt += 1
             if cnt % trainers == trainer_id:
                 yield line
-
-def main():
+def new_trainer():
     # for local training
     cluster_train = True
 
@@ -57,8 +56,8 @@ def main():
             num_gradient_servers=1,
             trainer_id=fetch_trainer_id(),
             pservers=fetch_pserver_ips())
-
-    word_dict = paddle.dataset.imikolov.build_dict()
+    with open(WORD_DICT_PATH) as f:
+        word_dict = pickle.load(f)
     dict_size = len(word_dict)
     firstword = paddle.layer.data(
         name="firstw", type=paddle.data_type.integer_value(dict_size))
@@ -90,19 +89,6 @@ def main():
                                   bias_attr=paddle.attr.Param(learning_rate=2),
                                   act=paddle.activation.Softmax())
 
-    def event_handler(event):
-        if isinstance(event, paddle.event.EndIteration):
-            if event.batch_id % 100 == 0:
-                with gzip.open("batch-" + str(event.batch_id) + ".tar.gz",
-                               'w') as f:
-                    trainer.save_parameter_to_tar(f)
-                result = trainer.test(
-                    paddle.batch(
-                        dist_reader(TEST_DATA_PATH, TRAINERS, fetch_trainer_id()),32))
-                print "Pass %d, Batch %d, Cost %f, %s, Testing metrics %s" % (
-                    event.pass_id, event.batch_id, event.cost, event.metrics,
-                    result.metrics)
-
     cost = paddle.layer.classification_cost(input=predictword, label=nextword)
 
     parameters = paddle.parameters.create(cost)
@@ -113,27 +99,40 @@ def main():
                                  parameters,
                                  adagrad,
                                  is_local=not cluster_train)
+    return trainer
 
-    job.dist_train(
-        trainer=trainer,
-        reader=paddle.batch(dist_reader(TRAIN_DATA_PATH, TRAINERS, \
-                                        fetch_trainer_id()), 32),
-        num_passes=30,
-        event_handler=event_handler,
-        paddle_job=job.PaddleJob(
+def event_handler(event):
+    if isinstance(event, paddle.event.EndIteration):
+         if event.batch_id % 100 == 0:
+             with gzip.open("batch-" + str(event.batch_id) + ".tar.gz",
+               'w') as f:
+                 trainer.save_parameter_to_tar(f)
+                 result = trainer.test(
+                    paddle.batch(
+                        dist_reader(TEST_DATA_PATH, TRAINERS, fetch_trainer_id()),32))
+                 print "Pass %d, Batch %d, Cost %f, %s, Testing metrics %s" % (
+                    event.pass_id, event.batch_id, event.cost, event.metrics,
+                    result.metrics)
+
+def main():
+    paddle_job=job.PaddleJob(
             pservers=3,
             base_image="yancey1989/paddle-job",
-            job_name="paddle-cloud",
+            job_name="paddle-job",
             namespace="yanxu",
             use_gpu=False,
             cpu_num=3,
             trainer_package_path="/example/word2vec",
             entry_point="python train.py",
             cephfs_volume=job.CephFSVolume(
-                monitors_addr="172.19.32.166:6789",
-                user="admin",
-                secret_name="ceph-secret",
-            )))
-
+                monitors_addr="172.19.32.166:6789"
+            ))
+    job.dist_train(
+        trainer_func=new_trainer,
+        reader=paddle.batch(dist_reader(TRAIN_DATA_PATH, TRAINERS, \
+                                        fetch_trainer_id()), 32),
+        num_passes=30,
+        event_handler=event_handler,
+        paddle_job=paddle_job)
 if __name__ == '__main__':
     main()
