@@ -2,14 +2,14 @@ import os
 from job_manager import JobManager
 __all__=["dist_train"]
 
-def get_parameter(parameter, env_parameter):
+def get_parameter(parameter, env_parameter, default):
     if parameter:
         return parameter
     else:
         if os.getenv(env_parameter, None):
             return os.getenv(env_parameter)
-    return ""
-
+        else:
+            return default
 
 def dist_train(trainer,
                reader,

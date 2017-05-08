@@ -1,6 +1,6 @@
 import gzip
 import math
-
+import pickle
 import paddle.v2 as paddle
 import paddle.job as job
 
@@ -12,7 +12,7 @@ N = 5
 CEPHFS_MOUNT_PATH="/mnt/cephfs"
 TRAIN_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "train.txt")
 TEST_DATA_PATH=os.path.join(CEPHFS_MOUNT_PATH, "test.txt")
-TRAINER_COUNT=int(os.getenv("TRAINER_COUNT", "1"))
+TRAINERS=int(os.getenv("TRAINERS", "1"))
 
 def wordemb(inlayer):
     wordemb = paddle.layer.embedding(
@@ -33,12 +33,12 @@ def fetch_trainer_id():
 def fetch_pserver_ips():
     return os.getenv("PSERVER_IPS", "")
 
-def dist_reader(filename, trainer_count, trainer_id):
+def dist_reader(filename, trainers, trainer_id):
     with open (filename) as f:
         cnt = 0
         for line in f:
             cnt += 1
-            if cnt % trainer_count == trainer_id:
+            if cnt % trainers == trainer_id:
                 yield line
 
 def main():
@@ -57,6 +57,7 @@ def main():
             num_gradient_servers=1,
             trainer_id=fetch_trainer_id(),
             pservers=fetch_pserver_ips())
+
     word_dict = paddle.dataset.imikolov.build_dict()
     dict_size = len(word_dict)
     firstword = paddle.layer.data(
@@ -97,7 +98,7 @@ def main():
                     trainer.save_parameter_to_tar(f)
                 result = trainer.test(
                     paddle.batch(
-                        dist_reader(TEST_DATA_PATH, TRAINER_COUNT, fetch_trainer_id()),32))
+                        dist_reader(TEST_DATA_PATH, TRAINERS, fetch_trainer_id()),32))
                 print "Pass %d, Batch %d, Cost %f, %s, Testing metrics %s" % (
                     event.pass_id, event.batch_id, event.cost, event.metrics,
                     result.metrics)
@@ -115,7 +116,7 @@ def main():
 
     job.dist_train(
         trainer=trainer,
-        reader=paddle.batch(dist_reader(TRAIN_DATA_PATH, TRAINER_COUNT, \
+        reader=paddle.batch(dist_reader(TRAIN_DATA_PATH, TRAINERS, \
                                         fetch_trainer_id()), 32),
         num_passes=30,
         event_handler=event_handler,
@@ -127,7 +128,12 @@ def main():
             use_gpu=False,
             cpu_num=3,
             trainer_package_path="/example/word2vec",
-            entry_point="python api_train_v2.py"))
+            entry_point="python train.py",
+            cephfs_volume=job.CephFSVolume(
+                monitors_addr="172.19.32.166:6789",
+                user="admin",
+                secret_name="ceph-secret",
+            )))
 
 if __name__ == '__main__':
     main()
