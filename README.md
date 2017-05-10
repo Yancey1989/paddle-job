@@ -15,7 +15,7 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
   An complete example for dataset: [imikolov](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/imikolov.py) is [here](./example/word2vec/prepare.py)
 
 ### Submit PaddleJob with Python Code
-  If you haven't configurated `kubectl`, do as this [tutorail](https://github.com/k8sp/tutorials/blob/develop/configure_kubectl.md) please.
+  If you haven't configurated `kubectl`, do as the [tutorial](https://github.com/k8sp/tutorials/blob/develop/configure_kubectl.md) please.
 - Fetch Runtime information:
   - *trainer id*, the unique id for each trainer, you can fetch current trainer id from environment variable `TRAINER_ID`
   - *trainer count*, the trainer process count, you can fetch this one from environment variable `TRAINERS`
