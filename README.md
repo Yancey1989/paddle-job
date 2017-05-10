@@ -2,12 +2,24 @@
 Running PaddlePaddle distributed training job on Kubernetes cluster.
 
 ## Usage
-### Configuration
+### Prepare Training Data
+
+  You can prepare the training data from `reader` function and write to files, an example:
+  ```python
+  def dataset_from_reader(filename, reader):
+      with open(filename, "w") as fn:
+          for batch_id, batch_data in enumerate(reader()):
+              batch_data_str = [str(d) for d in batch_data]
+              fn.write(",".join(batch_data_str))
+              fn.write("\n")
+  ```
+  An complete example for dataset: [imikolov](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/v2/dataset/imikolov.py) is [here](./example/word2vec/prepare.py)
+
 ### Submit PaddleJob with Python Code
   If you haven't configurated `kubectl`, do as this [tutorail](https://github.com/k8sp/tutorials/blob/develop/configure_kubectl.md) please.
-- Fetch Runtime information from env:
-  - *trainer id*, the unique id for each trainer, you can fetch current trainer id from env `TRAINER_ID`
-  - *trainer count*, the trainer process count, you can fetch this one from env `TRAINERS`
+- Fetch Runtime information:
+  - *trainer id*, the unique id for each trainer, you can fetch current trainer id from environment variable `TRAINER_ID`
+  - *trainer count*, the trainer process count, you can fetch this one from environment variable `TRAINERS`
 - Dist Reader Interface
 
   You can implement a `dist_reader` to reading data when the trainer is running on Kubernetes.
@@ -24,6 +36,7 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
                       yield tuple(csv_data)
       return dist_reader_creator
   ```
+  *NOTE*: You can read files from CephFS on directory: `/data/...`
 - Create [PaddleJob](#paddlejob-parameters) instance
   ```python
   import paddle.job as job
@@ -40,7 +53,7 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
           monitors_addr="172.19.32.166:6789"
       ))  
   ```
-- Build Runtime Docker Image from Base Docker Image
+- Build Runtime Docker Image on Base Docker Image
 
   You can build a runtime Docker Image with the tools: `./tools/build_docker.sh`, such as:
   ```bash
