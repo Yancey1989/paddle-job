@@ -134,5 +134,5 @@ parameter | type | default | explanation
 --- | --- | --- | ---
 user | string | admin |Ceph cluster user name
 secret_name | string | cephfs-secret|Ceph cluster secret, it's Kubernetes Secret name
-mount_path | string  | `/mnt/cephfs` |CephFS mount path in Pod
+mount_path | string  | `/data` |CephFS mount path in Pod
 path | string | `/` |CephFS path
