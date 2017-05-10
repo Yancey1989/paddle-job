@@ -3,8 +3,7 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
 
 ## Usage
 ### Prepare Training Data
-
-  You can prepare the training data from `reader` function and write to files, an example:
+  You can implement a distributed dataset with `reader function`, an example:
   ```python
   def dataset_from_reader(filename, reader):
       with open(filename, "w") as fn:
