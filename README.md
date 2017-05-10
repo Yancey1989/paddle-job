@@ -2,13 +2,15 @@
 Running PaddlePaddle distributed training job on Kubernetes cluster.
 
 ## Usage
+### Configuration
 ### Submit PaddleJob with Python Code
+  If you haven't configurated `kubectl`, do as this [tutorail](https://github.com/k8sp/tutorials/blob/develop/configure_kubectl.md) please.
 - Fetch Runtime information from env:
   - *trainer id*, the unique id for each trainer, you can fetch current trainer id from env `TRAINER_ID`
-  - *trainer count*, the trainer process count, you can fetch this from env `TRAINERS`
+  - *trainer count*, the trainer process count, you can fetch this one from env `TRAINERS`
 - Dist Reader Interface
 
-  You can implement a reader for reading data when the trainer is running on Kubernetes.
+  You can implement a `dist_reader` to reading data when the trainer is running on Kubernetes.
   An example implemention for dist reader creator:
   ```python
   def dist_reader(filename, trainers, trainer_id):
@@ -44,7 +46,7 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
   ```bash
   ./tools/build_docker.sh <src_trainer_package> <dest_trainer_package> <base Docker image> <runtime Docker image>
   ```
-  - *src_trainer_package* is the trainer files path on your host.
+  - *src_trainer_package*, the trainer package on your host.
   - *dest_trainer_package* is an absolute path, copies the src_trainer_package to the filesystem of the image at the path dest_trainer_package
   - *base Docker image* is PaddlePaddle product Docker image including paddle binary files and python packages. And of course, you can specify and image name hosted on any docker registry which users have the access right.
   - *runtime Docker image* your train package files are packaged into the runtime Docker image on base Docker image.
@@ -87,7 +89,7 @@ runtime_image | string | runtime Docker image
 
 - Advanced Parameters
 
-parameter | type | default | explain
+parameter | type | default | explanation
   --- | --- | --- | ---
 pservers | int | 2 | Parameter Server process count
 trainers | int | 3 | Trainer process count
