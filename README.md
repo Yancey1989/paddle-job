@@ -1,4 +1,4 @@
-# PaddlePaddel Job
+# PaddlePaddle Job
 Running PaddlePaddle distributed training job on Kubernetes cluster.
 
 ## Usage
