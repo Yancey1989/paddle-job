@@ -40,18 +40,30 @@ Running PaddlePaddle distributed training job on Kubernetes cluster.
   ```python
   import paddle.job as job
   paddle_job=job.PaddleJob(
-      pservers=3,
-      runtime_image="yancey1989/paddle-job",
-      job_name="paddle-job",
-      namespace="yanxu",
-      use_gpu=False,
-      cpu_num=3,
-      trainer_package_path="/example/word2vec",
-      entry_point="python train.py",
-      cephfs_volume=job.CephFSVolume(
-          monitors_addr="172.19.32.166:6789"
-      ))  
+        runtime_image="yancey1989/paddle-job",
+        job_name="paddle-job",
+        cpu_nums=3,
+        trainer_package="/example/word2vec",
+        entry_point="python train.py",
+        cephfs_volume=job.CephFSVolume(
+            monitors_addr="172.19.32.166:6789"
+        ))
   ```
+- Call `paddle.dist_trainer` to submit the Paddle Job
+  ```python
+  job.dist_train(
+      trainer=dist_trainer(),
+      paddle_job=paddle_job)
+  ```
+  - *trainer* is a trainer function, an example:
+    ```python
+    def dist_trainer():
+      def trainer_creator():
+        ...
+
+      return trainer_creator
+    ```
+
 - Build Runtime Docker Image on Base Docker Image
 
   You can build a runtime Docker Image with the tools: `./tools/build_docker.sh`, such as:
