@@ -29,24 +29,26 @@ class JobManager(object):
     def __init__(self, paddle_job):
         self.paddle_job = paddle_job
         init_api_client()
-        self.namespace = paddle_job.namespace
+        context, current_context = config.kube_config.list_kube_config_contexts()
+        self.namespace = current_context["context"].get("namespace", "default")
+        paddle_job.namespace = self.namespace
 
     def submit(self):
-        #submit parameter server statefulset
+        #submit parameter server, it's Kubernetes ReplicaSet
         try:
-            ret = client.AppsV1beta1Api().create_namespaced_stateful_set(
-                namespace=self.namespace,
-                body=self.paddle_job.new_pserver_job(),
+            ret = client.ExtensionsV1beta1Api().create_namespaced_replica_set(
+                self.namespace,
+                self.paddle_job.new_pserver_job(),
                 pretty=True)
         except ApiException, e:
             print "Exception when submit pserver job: %s " % e
             return False
 
-        #submit trainer job
+        #submit trainer job, it's Kubernetes Job
         try:
             ret = client.BatchV1Api().create_namespaced_job(
-                namespace=self.namespace,
-                body=self.paddle_job.new_trainer_job(),
+                self.namespace,
+                self.paddle_job.new_trainer_job(),
                 pretty=True)
         except ApiException, e:
             print "Exception when submit trainer job: %s" % e

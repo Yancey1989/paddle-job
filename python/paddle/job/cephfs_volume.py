@@ -9,13 +9,11 @@ class CephFSVolume(object):
         self.secret_name = get_parameter(secret_name, "CEPHFS_SECRET", "cephfs-secret")
         self.mount_path = get_parameter(mount_path, "CEPHFS_MOUNT_PATH", "/data")
         self.cephfs_path = get_parameter(cephfs_path, "CEPHFS_PATH", "/")
-        #self.volume = {}
-        #self.volume_mount = {}
 
     @property
     def volume(self):
         return {
-             "name:": "cephfs",
+             "name": "cephfs",
              "cephfs":{
                 "name": "cephfs",
                 "monitors": self.monitors,

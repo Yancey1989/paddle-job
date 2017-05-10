@@ -23,13 +23,13 @@ def fetch_pods_info(label_selector):
     return pod_list
 
 
-def wait_pods_running(label_selector, num):
-    print "label selector: %s, num: %s" % (label_selector, num)
+def wait_pods_running(label_selector, desired):
+    print "label selector: %s, desired: %s" % (label_selector, desired)
     while True:
         pod_list = fetch_pods_info(label_selector)
         running_pod_list = filter(lambda x: x[0] == "Running", pod_list)
         print "running pod list: ", running_pod_list
-        if len(running_pod_list) == int(num):
+        if len(running_pod_list) == int(desired):
             return [item[1] for item in running_pod_list]
         print "sleep for 10 seconds..."
         time.sleep(10)

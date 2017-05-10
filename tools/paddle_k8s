@@ -2,22 +2,22 @@
 set -e
 start_pserver() {
     paddle pserver \
-      --port=$PORT \
-      --ports_num=$PORTS_NUM \
-      --ports_num_for_sparse=$PORTS_NUM_FOR_SPARSE \
+      --port=$PADDLE_INIT_PORT \
+      --ports_num=$PADDLE_INIT_PORTS_NUM \
+      --ports_num_for_sparse=$PADDLE_INIT_PORTS_NUM_FOR_SPARSE \
       --nics=$NICES \
       --comment=paddle_process_k8s \
-      --num_gradient_servers=$NUM_GRADIENT_SERVERS
+      --num_gradient_servers=$PADDLE_INIT_NUM_GRADIENT_SERVERS
 }
 
 start_trainer() {
     python /root/k8s_tools.py wait_pods_running paddle-job=${PADDLE_JOB_NAME}-pserver ${PSERVERS}
     python /root/k8s_tools.py wait_pods_running paddle-job=${PADDLE_JOB_NAME}-trainer ${TRAINERS}
-    export PSERVER_IPS=$(python /root/k8s_tools.py fetch_pserver_ips)
-    export TRAINER_ID=$(python /root/k8s_tools.py fetch_trainer_id)
+    export PADDLE_INIT_PSERVERS=$(python /root/k8s_tools.py fetch_pserver_ips)
+    export PADDLE_INIT_TRAINER_ID=$(python /root/k8s_tools.py fetch_trainer_id)
 
     rm -rf /root/trainer
-    cp -rf $TRAINER_PACKAGE_PATH /root/trainer
+    cp -rf $TRAINER_PACKAGE /root/trainer
     cd /root/trainer
     export PYTHONPATH=/root/trainer:$PYTHONPATH
     ${ENTRY_POINT}

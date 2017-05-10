@@ -11,22 +11,13 @@ def get_parameter(parameter, env_parameter, default):
         else:
             return default
 
-def dist_train(trainer_func,
-               reader,
-               num_passes=1,
-               event_handler=None,
-               feeding=None,
-               paddle_job=None):
+def dist_train(trainer,
+               paddle_job):
     if os.getenv("RUNNING_ON_CLOUD", "NO") == "NO":
         job_manager = JobManager(paddle_job)
         if not job_manager.submit():
-            print "submit paddle job failed."
+            print "submit Paddle Job failed."
         else:
-            print "submit paddle job successed."
+            print "submit Paddle Job successed."
     else:
-	trainer = trainer_func()
-        trainer.train(
-            reader=reader,
-            num_passes=num_passes,
-            event_handler=event_handler,
-            feeding=feeding)
+        trainer()

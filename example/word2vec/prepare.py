@@ -3,8 +3,8 @@ import pickle
 import os
 N=5
 output = os.getenv("OUTPUT","./")
-train_data_path = os.path.join(output, "train.txt")
-test_data_path = os.path.join(output, "test.txt")
+train_data_path = os.path.join(output, "train.csv")
+test_data_path = os.path.join(output, "test.csv")
 word_dict_path = os.path.join(output, "word_dict.pickle")
 
 def dataset_from_reader(filename, reader):

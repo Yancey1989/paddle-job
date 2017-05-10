@@ -1,84 +1,112 @@
 # PaddlePaddel Job
-Submit PaddlePaddle distributed traininig job to Kubernetes cluster
+Running PaddlePaddle distributed training job on Kubernetes cluster.
 
 ## Usage
-- Build and Push Docker Image
-  ```bash
-  ./docker/build_docker.sh <trainer_package_path> <image_package_path> <image name> <image tag>
-  docker push <image name>:<image tag>
+### Submit PaddleJob with Python Code
+- Fetch Runtime information from env:
+  - *trainer id*, the unique id for each trainer, you can fetch current trainer id from env `TRAINER_ID`
+  - *trainer count*, the trainer process count, you can fetch this from env `TRAINERS`
+- Dist Reader Interface
+
+  You can implement a reader for reading data when the trainer is running on Kubernetes.
+  An example implemention for dist reader creator:
+  ```python
+  def dist_reader(filename, trainers, trainer_id):
+      def dist_reader_creator():
+          with open (filename) as f:
+              cnt = 0
+              for line in f:
+                  cnt += 1
+                  if cnt % trainers == trainer_id:
+                      csv_data = [int(cell) for cell in line.split(",")]
+                      yield tuple(csv_data)
+      return dist_reader_creator
   ```
-  Example:
-  ```bash
-  ./docker/build_docker.sh ./example/ /example yancey1989/paddle_job latest
-  docker push yancey1989/paddle_job:latest
-  ```
-- Submit Distributed Job
-  ```bash
-  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config <image name>:<image tag> python /example/word2vec/api_train_v2.py
-  ```
-  Example:
-  ```bash
-  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config yancey1989/paddle_job python /example/word2vec/api_train_v2.py
-  ```
-- Initialize `PaddleJob`
+- Create [PaddleJob](#paddlejob-parameters) instance
   ```python
   import paddle.job as job
-  paddle_job = job.PaddleJob(
-    pservers=3,
-    base_image="yancey1989/paddle-cloud",
-    input="/yanxu05",
-    output="/yanxu05",
-    job_name="paddle-cloud",
-    namespace="yanxu",
-    use_gpu=False,
-    cpu_num=3,
-    memory="1G"
-    trainer_package_path="/example/word2vec",
-    entry_point="python api_train_v2.py",
-    cephfs_volume=CephVolume())
+  paddle_job=job.PaddleJob(
+      pservers=3,
+      runtime_image="yancey1989/paddle-job",
+      job_name="paddle-job",
+      namespace="yanxu",
+      use_gpu=False,
+      cpu_num=3,
+      trainer_package_path="/example/word2vec",
+      entry_point="python train.py",
+      cephfs_volume=job.CephFSVolume(
+          monitors_addr="172.19.32.166:6789"
+      ))  
   ```
-- Local Training and Distributed Traininig
+- Build Runtime Docker Image from Base Docker Image
 
-  If you want to start a local training job, according with PaddlePaddle v2 API
-  ```python
-  trainer.train(reader=reader, num_passes=100, ...)
+  You can build a runtime Docker Image with the tools: `./tools/build_docker.sh`, such as:
+  ```bash
+  ./tools/build_docker.sh <src_trainer_package> <dest_trainer_package> <base Docker image> <runtime Docker image>
   ```
-  Otherwise, you can call `job.dist_train` to submit a distributed training job
-  ```python
-  job.dist_train(trainer=trainer, reader=reader, paddle_job=paddle_job)
+  - *src_trainer_package* is the trainer files path on your host.
+  - *dest_trainer_package* is an absolute path, copies the src_trainer_package to the filesystem of the image at the path dest_trainer_package
+  - *base Docker image* is PaddlePaddle product Docker image including paddle binary files and python packages. And of course, you can specify and image name hosted on any docker registry which users have the access right.
+  - *runtime Docker image* your train package files are packaged into the runtime Docker image on base Docker image.
+  Example:
+  ```bash
+  ./tools/build_docker.sh ./example/ /example paddlepaddle/paddle yancey1989/paddle-job
   ```
-- Running On Cloud
+- Push the Runtime Docker Image
 
-  If the code is running on cloud, the environment variable "PADDLE_ON_CLOUD=YES" will be set,
-  so you can custom the difference logic for distributed traininig and local traininig.
+  You can push your Runtime Docker Image to Docker registry server
+  ```bash
+  docker push <runtime Docker image>
+  ```
+  Example:
+  ```bash
+  docker push yancey1989/paddle-job
+  ```
+- Submit Distributed Job
 
-## Parameters
+  ```bash
+  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config <runtime image name> <entry point>
+  ```
+  Example:
+  ```bash
+  docker run --rm -it -v $HOME/.kube/config:/root/.kube/config python /example/train.py
+  ```
 
-- `PaddleJob`
+## PaddlePaddle Job Configuration
 
-parameter | required | default | explain
+### PaddleJob parameters
+- Required Parameters
+
+parameter | type | explanation
+--- | --- | ---
+job_name | string | the unique name for the training job
+entry_point | string |entry point for startup trainer process
+memory | string | memory allocated for the job, a plain integer using one of these suffixes: E, P, T, G, M, K
+cpu_nums | int | CPU count for the job
+runtime_image | string | runtime Docker image
+
+- Advanced Parameters
+
+parameter | type | default | explain
   --- | --- | --- | ---
-job_name|YES||you should special a uniq job name which in a namespace
-trainer_package|YES|| entry point for startup trainer process
-input| YES || input directory on distributed file system
-output|YES|| output directory on distributed file system
-pservers|YES|| parameter server process count
-base-image|YES||PaddlePaddle production Docker image
-memory|YES|| limits for memory
-use_gpu|NO|False| whether use GPU
-cpu_num|NO|1| if `use_gpu=false`, this parameter is required
-gpu_num|NO|1| if `use_gpu=true`, this parameter is required
-cephfs_volume|NO|None|CephFS volume configuration
+pservers | int | 2 | Parameter Server process count
+trainers | int | 3 | Trainer process count
+gpu_nums | int | 0 | GPU count for the job
+cephfs_volume| CephFSVolume | None | CephFS volume configuration
 
-- `CephFSVolume`
 
-If you want to use CephFS as your distributed storage,
-you can configurat `CephFSVolume` with
-`CephFSVolume(monitors_addr="10.0.123.3:6789,10.0.123.4:6789",...)` or initialize `CephFSVolume` with environment variables and no parameters: `CephFSVolume()`
+### CephFSVolume parameters
+- Required Parameters
 
-parameter | required | default | environment |explain
- --- | --- | --- | --- | ---
- monitors_addr| YES | | CEPHFS_MONITORS_ADDR| ceph cluster monitor addres
-user | YES| admin |CEPHFS_USER|ceph user name
-secret_name | YES |ceph-secret | CEPHFS_SECRET | ceph secret name in kubernetes
-mount_path | NO | /mnt/cephfs | CEPHFS_MOUNT_PATH | CephFS mount path in Pod
+parameter | type | explanation
+--- | --- | ---
+monitors_addr | string | the address for Ceph cluster monitors.
+
+- Advanced Parameters
+
+parameter | type | default | explanation
+--- | --- | --- | ---
+user | string | admin |Ceph cluster user name
+secret_name | string | cephfs-secret|Ceph cluster secret, it's Kubernetes Secret name
+mount_path | string  | `/mnt/cephfs` |CephFS mount path in Pod
+path | string | `/` |CephFS path

@@ -1,54 +1,55 @@
 #!/bin/bash
-set -xe
-
 cur_path="$(cd "$(dirname "$0")" && pwd -P)"
 cd "$cur_path"/../
 
-#Trainer package
+#src trainer package
 if [ ! -n "$1" ]; then
-  trainer_package_path=./example
+  src_trainer_package=./example
 else
-  trainer_package_path=$1
+  src_trainer_package=$1
 fi
 
-#Trainer package
+#dest trainer package
 if [ ! -n "$2" ]; then
-  trainer_package_image_path=/example
+  dest_trainer_package=/example
 else
-  trainer_package_image_path=$2
+  dest_trainer_package=$2
 fi
 
-#Paddle Job Docker image name
+#Paddle Job base Docker image
 if [ ! -n "$3" ]; then
-  image_name=paddlepaddle/paddle_job
+  base_docker_image=paddlepaddle/paddle:latest
 else
-  image_name=$3
+  base_docker_image=$3
 fi
 
-#Paddle Job Docker image tag
+#Paddle Job runtime Docker image
 if [ ! -n "$4" ]; then
-  image_tag=latest
+  runtime_docker_image=paddlepaddle/paddle_job
 else
-  image_tag=$4
+  runtime_docker_image=$4
 fi
 
-echo "paddle_job_image:"$image_name:$image_tag
+echo "src_trainer_package": $src_trainer_package
+echo "dest_trainer_package": $dest_trainer_package
+echo "base_docker_image": $base_docker_image
+echo "runtime_docker_image": $runtime_docker_image
 
 #Build Python Package
-cd python && python setup.py bdist_wheel && cd ..
+docker run --rm -it -v $PWD:/paddle-job $base_docker_image \
+  bash -c "cd /paddle-job/python && python setup.py bdist_wheel"
 
 #Build Docker Image
 cat > Dockerfile <<EOF
-FROM yancey1989/paddle:0.10.0rc4
-#paddle_k8s and k8s_tools is for test,
-#this will be deleted if paddle service discovery ready.
+FROM ${base_docker_image}
 ADD ./tools/paddle_k8s /usr/bin
 ADD ./tools/k8s_tools.py /root/
-ADD ./python/dist/paddle_job-0.1.0-py2-none-any.whl /
-ADD ${trainer_package_path} ${trainer_package_image_path}
-RUN pip install /paddle_job-0.1.0-py2-none-any.whl \
-      && rm /paddle_job-0.1.0-py2-none-any.whl
+ADD ./python/dist/paddle_job-0.10.0-py2-none-any.whl /
+ADD ${src_trainer_package} ${dest_trainer_package}
+RUN pip install -U /paddle_job-0.10.0-py2-none-any.whl \
+    && pip install -U requests \
+    && rm /paddle_job-0.10.0-py2-none-any.whl
 CMD ["paddle_k8s"]
 EOF
 
-docker build -t ${image_name}:${image_tag} .
+docker build -t $runtime_docker_image .
